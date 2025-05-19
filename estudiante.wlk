@@ -2,7 +2,6 @@ import materia.*
 import nota_materia.*
 
 class Estudiante {
-    const property nombre
     const property materiasInscriptas = #{}
     const property carrerasInscriptas = #{}
     const notasObtenidas = []
@@ -61,7 +60,7 @@ class Estudiante {
     method cantidadDeAprobadas() = self.materiasAprobadas().size()
 
     method estaAprobada(materia) {
-        return !notasObtenidas.filter({n => n.materia() == materia && n.aprobada()}).isEmpty()
+        return self.materiasAprobadas().any({m => m == materia})
     }
 
     method promedio() {

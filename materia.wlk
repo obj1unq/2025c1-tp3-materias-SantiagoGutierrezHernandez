@@ -54,7 +54,6 @@ class ListaAvance inherits ListaDeEspera {
 }
 
 class Materia {
-    const property nombre
     const property cupos
     const property creditos
     const property requisito = null
@@ -79,8 +78,10 @@ class Materia {
 
     method enListaDeEspera(estudiante) = listaDeEspera.contains(estudiante)
 
+    method hayCupos() = estudiantesInscriptos.size() < cupos
+
     method inscribirEstudiante(estudiante){
-        if(estudiantesInscriptos.size() < cupos) {
+        if(self.hayCupos()) {
             estudiante.confirmarInscripcionMateria(self)
             estudiantesInscriptos.add(estudiante)
         }
