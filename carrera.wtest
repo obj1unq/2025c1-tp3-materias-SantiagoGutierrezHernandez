@@ -1,0 +1,95 @@
+import carrera.*
+import estudiante.*
+import materia.*
+import nota_materia.*
+
+
+describe "Carrera programacion"{
+    // MATERIAS
+    const objetos1 = new Materia(cupos=30, creditos=10)
+    const matematica1 = new Materia(cupos=30, creditos=10)
+    const bbdd = new Materia(cupos=30, creditos=10)
+    const biologia1 = new Materia(cupos=30, creditos=10)
+    const quimica = new Materia(cupos=30, creditos=10)
+    const epyl = new Materia(cupos=30, creditos=10)
+    const objetos2 = new Materia(
+        cupos=3,
+        creditos=10,
+        requisito=new RequisitoDeMateriasPrevias(materiasPrevias=#{objetos1, matematica1})
+    )
+    const objetos3 = new Materia(
+        cupos=30,
+        creditos=10,
+        requisito=new RequisitoDeMateriasPrevias(materiasPrevias=#{objetos2, bbdd})
+    )
+    const concurrente = new Materia(
+        cupos=30,
+        creditos=10,
+        requisito=new RequisitoDeMateriasPrevias(materiasPrevias=#{objetos1, bbdd})
+    )
+    const biologia2 = new Materia(
+        cupos=30,
+        creditos=10,
+        requisito=new RequisitoDeMateriasPrevias(materiasPrevias=#{biologia1})
+    )
+
+    // CARRERAS
+    const programacion = new Carrera(
+        materias=#{objetos1, objetos2, objetos3, bbdd, concurrente, epyl, matematica1}
+    )
+    const medicina = new Carrera(
+        materias=#{biologia1, biologia2, quimica}
+    )
+
+    // ESTUDIANTES
+    const roque = new Estudiante()
+    const luisa = new Estudiante()
+    const romina = new Estudiante()
+    const alicia = new Estudiante()
+    const ana = new Estudiante()
+
+    method initialize(){
+        roque.inscribirCarrera(medicina)
+        [roque, luisa, romina, alicia, ana].forEach({e => e.inscribirCarrera(programacion)})
+
+        [roque, luisa, romina, alicia, ana].forEach({e => self.inscribirYAprobar(e, epyl)})
+        [roque, luisa, romina, alicia].forEach({e => self.inscribirYAprobar(e, objetos1)})
+        [roque, luisa, romina, alicia].forEach({e => self.inscribirYAprobar(e, matematica1)})
+        self.inscribirYAprobar(roque, bbdd)
+        self.inscribirYAprobar(roque, quimica)
+        self.inscribirYAprobar(roque, biologia1)
+    }
+
+    method inscribirYAprobar(estudiante, materia){
+        materia.inscribirEstudiante(estudiante)
+        estudiante.registrarNota(materia, 10)
+    }
+
+    test "roque se puede inscribir a objetos 2 pero no a 1 ni 3" {
+        assert.doesNotThrowException({objetos2.inscribirEstudiante(roque)})
+        assert.throwsException({objetos3.inscribirEstudiante(roque)})
+        assert.throwsException({objetos1.inscribirEstudiante(roque)})
+    }
+
+    test "roque se puede inscribir a objetos 2, concurrente y biologia 2" {
+        assert.doesNotThrowException({objetos2.inscribirEstudiante(roque)})
+        assert.doesNotThrowException({concurrente.inscribirEstudiante(roque)})
+        assert.doesNotThrowException({biologia2.inscribirEstudiante(roque)})
+    }
+
+    test "roque queda en lista de espera de objetos 2" {
+        [luisa, romina, alicia, roque].forEach({e => objetos2.inscribirEstudiante(e)})
+        assert.equals(#{luisa, romina, alicia}, objetos2.estudiantesInscriptos())
+        assert.equals(true, objetos2.listaDeEspera().contains(roque))
+        assert.equals(1, objetos2.listaDeEspera().size())
+    }
+
+    test "roque entra tras baja en objetos 2" {
+        [luisa, romina, alicia, roque].forEach({e => objetos2.inscribirEstudiante(e)})
+        assert.equals(#{luisa, romina, alicia}, objetos2.estudiantesInscriptos())
+        assert.equals(1, objetos2.listaDeEspera().size())
+        romina.bajaDeMateria(objetos2)
+        assert.equals(#{luisa, roque, alicia}, objetos2.estudiantesInscriptos())
+        assert.equals(true, objetos2.listaDeEspera().isEmpty())
+    }
+}
